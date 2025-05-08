@@ -1,15 +1,45 @@
-# Projeto ViT 3D - Diagnóstico de Doenças Neurodegenerativas
+# Projeto de Classificação de Imagens Médicas com Arquiteturas 2D e 3D
 
-Este projeto aplica aprendizado profundo com Vision Transformers tridimensionais (ViT 3D) em imagens médicas (MRI) para o diagnóstico precoce de doenças neurodegenerativas, com base em dados derivados da base ADNI.
+Este projeto tem como objetivo realizar a classificação de imagens médicas utilizando redes neurais baseadas em arquiteturas Vision Transformer (ViT), tanto para entradas 2D quanto 3D. A estrutura foi desenvolvida com flexibilidade para adaptar diferentes tipos de dados de entrada e estratégias de treinamento.
 
-## Estrutura do Projeto
-- `src/`: Código-fonte com dataset, modelo, treino e avaliação.
-- `configs/`: Arquivo de configuração com hiperparâmetros.
-- `scripts/`: Scripts de execução.
-- `data/`: Dados de entrada (.parquet).
-- `models/`: Modelos treinados.
-- `logs/`: Logs e resultados.
+## 🧠 Arquiteturas Suportadas
+- **ViT 2D**: Para imagens planas (como cortes de ressonância).
+- **ViT 3D**: Para volumes completos (como séries volumétricas de exames médicos).
 
-## Requisitos
-Consulte `requirements.txt` após configurar o ambiente virtual:
+## 📁 Estrutura Atual
+- `configs/`: Arquivos YAML com hiperparâmetros e configurações.
+- `data/`: Dados de treino e teste (.parquet).
+- `logs/`: Logs e métricas visuais, como matrizes de confusão.
+- `models/`: Pesos treinados (.pth).
+- `scripts/`: Scripts auxiliares, como visualização de imagens.
+- `src/`: Código-fonte principal com carregamento de dados, definição de modelo, treinamento e avaliação.
 
+## ▶️ Como Executar
+
+1. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+
+2. Ajuste as configurações em configs/config.yaml.
+
+3. Inicie o treinamento:
+    ```bash
+    python3 scripts/run_training.py
+
+3. Para visualizar amostras dos dados:
+    ```bash
+    python scripts/test_view_images.py
+
+## 🧪 Entrada Esperada
+
+Os dados devem estar em formato .parquet contendo:
+
+- image.bytes: imagem em bytes
+
+- label: rótulo de classificação
+
+- image.path (opcional): nome da imagem original
+
+## 🔄 Futuras Extensões
+
+# PRECISO CORRIGIR OS PATHS EM CADA .PY
