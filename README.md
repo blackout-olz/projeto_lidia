@@ -42,4 +42,7 @@ Os dados devem estar em formato .parquet contendo:
 
 ## 🔄 Futuras Extensões
 
-# PRECISO CORRIGIR OS PATHS EM CADA .PY
+- Testes com mais arquiteturas
+- Testes com vários hiperparâmetros para cada arquitetura
+- Relatórios para os resultados de cada arquitetura
+- Começar a rodar arquiteturas 3D

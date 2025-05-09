@@ -21,7 +21,7 @@ class MRIDatasetParquet(Dataset):
     def __getitem__(self, idx):
         row = self.dataframe.iloc[idx]
         label = int(row['label'])
-        img_bytes = row['image.bytes']
+        img_bytes = row['image']['bytes']
         image = Image.open(io.BytesIO(img_bytes))
         image = self.transform(image)
         return image, label

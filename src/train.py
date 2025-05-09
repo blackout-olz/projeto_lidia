@@ -63,11 +63,8 @@ def evaluate(model, dataloader, loss_fn, device):
     accuracy = correct / total
     return avg_loss, accuracy
 
-def train_model(model, train_loader, val_loader, device, num_epochs=30, patience=5):
+def train_model(model, train_loader, val_loader, device, num_epochs=100, patience=20):
     model.to(device)
-
-    # Congela backbone e libera últimas 4 camadas
-    #freeze_backbone_except_last_layers(model)
 
     optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-5, weight_decay=0.01)
     scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs)

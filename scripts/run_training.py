@@ -6,19 +6,19 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from torch.nn import CrossEntropyLoss
 
-from src.data_loader import load_dataframes
-from src.dataset import MRIDatasetParquet
-from src.model import ViT2DClassifier
+from src.data_loader_2d.loader import load_dataframes
+from src.data_loader_2d.dataset import MRIDatasetParquet
+from src.model_2d.vit2d import TimmViT2DClassifier
 from src.train import train_model
-from src.eval import evaluate_on_loader
+from src.common.eval import evaluate_on_loader
 
 # =====================
 # Configurações iniciais
 # =====================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 2
-num_epochs = 30
-patience = 5
+num_epochs = 100
+patience = 20
 num_classes = 4
 
 # =====================
@@ -49,7 +49,7 @@ test_loader  = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 # Instanciar modelo
 # =====================
 
-model = ViT2DClassifier(num_classes=4)
+model = TimmViT2DClassifier(num_classes=4)
 
 # =====================
 # Treinamento
@@ -74,8 +74,8 @@ metrics = evaluate_on_loader(
     device=device,
     loss_fn=loss_fn,
     num_classes=num_classes,
-    save_confusion_path="logs/confusion_matrix.png"
+    save_confusion_path="logs/confusion_matrix_timmvitb16_2d_com_dropout01.png"
 )
 
 # (Opcional) salvar o modelo final
-torch.save(model.state_dict(), "models/swinunetr_classification.pth")
+torch.save(model.state_dict(), "models/timmvitb16_2d_com_dropout0.1.pth")
