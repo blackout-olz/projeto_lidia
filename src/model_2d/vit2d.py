@@ -1,38 +1,23 @@
-import torch.nn as nn
-from torchvision.models import vit_b_16
 from timm import create_model
 
+SUPPORTED_VITS = [
+    "vit_small_patch16_224",
+    "crossvit_15_240",
+    "levit_192",
+    "deit_base_patch16_224",
+    "swin_tiny_patch4_window7_224",
+]
 
-class ViT2DClassifier(nn.Module):
-    def __init__(self, num_classes=4):
-        super().__init__()
-        self.vit = vit_b_16(pretrained=True)
+def get_model(model_name, num_classes, hyperparams):
+    if model_name not in SUPPORTED_VITS:
+        raise ValueError(f"Modelo '{model_name}' não está na lista de ViTs suportados.")
 
-        # Substituir a cabeça: acessar corretamente o in_features
-        in_features = self.vit.heads[0].in_features
-        self.vit.heads = nn.Linear(in_features, num_classes)
-
-    def forward(self, x):
-        return self.vit(x)
-    
-
-class TimmViT2DClassifier(nn.Module):
-    def __init__(self, num_classes=4):
-        super().__init__()
-
-        # Cria o modelo com dropout regular e na atenção
-        self.vit = create_model(
-            'vit_base_patch16_224',
-            pretrained=True,
-            num_classes=num_classes,  # já substitui a cabeça
-            drop_rate=0.1,
-            attn_drop_rate=0.1,
-            drop_path_rate=0.1
-        )
-
-        # Se quiser controlar manualmente o head:
-        # in_features = self.vit.head.in_features
-        # self.vit.head = nn.Linear(in_features, num_classes)
-
-    def forward(self, x):
-        return self.vit(x)
+    model = create_model(
+        model_name,
+        pretrained=True,
+        num_classes=num_classes,
+        drop_rate=hyperparams.get("dropout", 0.0),
+        drop_path_rate=hyperparams.get("drop_path", 0.0),
+        attn_drop_rate=hyperparams.get("attn_drop", 0.0),
+    )
+    return model
