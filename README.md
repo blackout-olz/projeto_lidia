@@ -1,48 +1,101 @@
-# Projeto de Classificação de Imagens Médicas com Arquiteturas 2D e 3D
+# Classificação de Imagens Médicas com Vision Transformers (2D e 3D)
 
-Este projeto tem como objetivo realizar a classificação de imagens médicas utilizando redes neurais baseadas em arquiteturas Vision Transformer (ViT), tanto para entradas 2D quanto 3D. A estrutura foi desenvolvida com flexibilidade para adaptar diferentes tipos de dados de entrada e estratégias de treinamento.
+Este projeto tem como objetivo realizar a **classificação automática de imagens médicas de ressonância magnética (MRI)** para auxiliar no **diagnóstico precoce de doenças neurodegenerativas (AD)**. Utiliza arquiteturas Vision Transformer (ViT), com suporte para dados em **2D (cortes)** e **3D (volumes completos)**. Atualmente, o foco está nas arquiteturas **2D**, com extensibilidade futura para o uso de ViTs 3D.
 
-## 🧠 Arquiteturas Suportadas
-- **ViT 2D**: Para imagens planas (como cortes de ressonância).
-- **ViT 3D**: Para volumes completos (como séries volumétricas de exames médicos).
+---
 
-## 📁 Estrutura Atual
-- `configs/`: Arquivos YAML com hiperparâmetros e configurações.
-- `data/`: Dados de treino e teste (.parquet).
-- `logs/`: Logs e métricas visuais, como matrizes de confusão.
-- `models/`: Pesos treinados (.pth).
-- `scripts/`: Scripts auxiliares, como visualização de imagens.
-- `src/`: Código-fonte principal com carregamento de dados, definição de modelo, treinamento e avaliação.
+## Funcionalidades Implementadas
 
-## ▶️ Como Executar
+- Treinamento de cinco arquiteturas ViT 2D distintas usando `timm`
+- Otimização de hiperparâmetros com **Optuna**
+- Geração de relatórios PDF para **cada trial**, com:
+  - Gráficos de acurácia e perda
+  - Métricas como F1, AUC, precisão, etc.
+  - Hiperparâmetros utilizados
+- Salvamento automático dos modelos (.pth)
+- Teste do melhor modelo no conjunto de teste
+- Geração de resumo final (`.txt`) com as métricas da melhor trial
 
-1. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
+> A parte 3D está em fase de planejamento e será desenvolvida com lógica semelhante.
 
-2. Ajuste as configurações em configs/config.yaml.
+---
 
-3. Inicie o treinamento:
-    ```bash
-    python3 scripts/run_training.py
+## Estrutura de Diretórios
 
-3. Para visualizar amostras dos dados:
-    ```bash
-    python scripts/test_view_images.py
+```plaintext
+configs/          # Arquivos YAML com configurações específicas para 2D e 3D
+data/             # Conjunto de dados .parquet (2D e futuramente 3D)
+logs/             # Logs e visualizações por trial (matrizes, gráficos etc)
+models/           # Pesos treinados (.pth)
+scripts/          # Scripts auxiliares de tuning, visualização, etc.
+src/              # Código-fonte principal
+│
+├── common/               # Funções compartilhadas (avaliação, métricas etc.)
+├── data_loader_2d/       # Dataset e loader para dados 2D
+├── data_loader_3d/       # [em construção] Loader para dados 3D
+├── model_2d/             # Modelos 2D (ViT via timm)
+├── model_3d/             # [em construção] Suporte para ViT 3D
+├── train.py              # Lógica de treinamento principal
+```
 
-## 🧪 Entrada Esperada
+## Arquiteturas ViT 2D Suportadas
 
-Os dados devem estar em formato .parquet contendo:
+Usando a função create_model() da biblioteca timm, as seguintes arquiteturas já estão disponíveis:
 
-- image.bytes: imagem em bytes
+- vit_small_patch16_224
+- crossvit_15_240
+- levit_192
+- deit_base_patch16_224
+- swin_tiny_patch4_window7_224
 
-- label: rótulo de classificação
+> As ViTs 3D ainda serão definidas, mas o plano é aplicar abordagem semelhante (tunning + teste).
 
-- image.path (opcional): nome da imagem original
+## Formato de Entrada Esperado
 
-## 🔄 Futuras Extensões
+- Imagens 2D (3D no futuro). Módulo data_loader_* deve ser adaptado para cada tipo de imagem utilizada no treinamento. Atualmente é usado um dataset com um conjunto de imagens em .parquet, disponível em:
+> https://www.kaggle.com/datasets/borhanitrash/alzheimer-mri-disease-classification-dataset
 
-- Testes com mais arquiteturas
-- Testes com vários hiperparâmetros para cada arquitetura
-- Relatórios para os resultados de cada arquitetura
-- Começar a rodar arquiteturas 3D
+## Como Executar
+
+### 1. Instalar as dependências
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configurar (não implementado atualmente)
+
+Edite os arquivos em configs/config_2d.yaml ou configs/config_3d.yaml com os hiperparâmetros desejados.
+
+### 3. Rodar tuning de uma arquitetura
+```bash
+python3 scripts/tuner.py
+```
+* Isso poderá ser pulado no futuro se optar por usar uma arquitetura já tunada e disponibilizada (ainda não implementado)
+
+## Saídas geradas (treinamento)
+
+Após a execução, você terá:
+- Modelos salvos em models/
+- Logs e visualizações em logs/
+- Um .pdf para cada trial com detalhes completos
+- Um .txt final com as métricas da melhor execução no conjunto de teste
+
+## Planejamento futuro
+
+- Treinamento e tuning de ViTs 3D
+- Comparação entre arquiteturas 2D e 3D
+- Aplicação web e/ou desktop com carregamento de imagens e classificação automática
+- Avaliação robusta em novos datasets
+
+## Tecnologias utilizadas
+
+- Python
+- PyTorch + timm
+- Optuna
+- Matplotlib, Seaborn, FPDF, sklearn, numpy..
+- [futuramente] MONAI (provavelmente) para suporte 3D
+
+##
+Desenvolvido por André
+
+Este projeto faz parte de uma pesquisa voltada para diagnóstico precoce de doenças neurodegenerativas (AD) com IA em imagens médicas (MRI).

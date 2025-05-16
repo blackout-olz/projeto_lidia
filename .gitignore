@@ -3,4 +3,5 @@ __pycache__/
 *.pyc
 logs/
 *.pth
+*.pt
 data/3d/

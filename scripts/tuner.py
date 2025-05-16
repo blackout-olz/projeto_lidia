@@ -18,6 +18,19 @@ model_name = "vit_small_patch16_224"  # Altere para testar outras
 os.makedirs("logs", exist_ok=True)
 os.makedirs("models", exist_ok=True)
 
+df_train_raw, df_test = load_dataframes()
+
+df_train, df_val = train_test_split(
+    df_train_raw,
+    test_size=0.25,
+    stratify=df_train_raw['label'],
+    random_state=42
+)
+
+train_dataset = MRIDatasetParquet(df_train)
+val_dataset   = MRIDatasetParquet(df_val)
+test_dataset  = MRIDatasetParquet(df_test)
+
 def objective(trial):
     # Sugere hiperparâmetros
     hyperparams = {
@@ -28,25 +41,11 @@ def objective(trial):
         "weight_decay": trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True),
     }
     batch_size = trial.suggest_categorical("batch_size", [8, 16, 32])
-    num_epochs = trial.suggest_int("num_epochs", 10, 50)
-    early_stopping = trial.suggest_int("early_stopping_patience", 3, 10)
-
-    df_train_raw, df_test = load_dataframes()
-
-    df_train, df_val = train_test_split(
-        df_train_raw,
-        test_size=0.25,
-        stratify=df_train_raw['label'],
-        random_state=42
-    )
-
-    train_dataset = MRIDatasetParquet(df_train)
-    val_dataset   = MRIDatasetParquet(df_val)
-    test_dataset  = MRIDatasetParquet(df_test)
+    num_epochs = trial.suggest_int("num_epochs", 100, 150)
+    early_stopping = trial.suggest_int("early_stopping_patience", 30, 50)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader   = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader  = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     model = get_model(model_name, num_classes=num_classes, hyperparams=hyperparams).to(device)
 
@@ -82,12 +81,14 @@ def objective(trial):
 
     trial.set_user_attr("model_name", model_name)
 
-    return metrics["f1_macro"]
+    return metrics["Accuracy"]
 
 
 if __name__ == "__main__":
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=100)
+
+    best_trial = study.best_trial
 
     with open(os.path.join("logs", f"melhor_trial_{model_name}.txt"), "w") as f:
         f.write(f"Modelo: {study.best_trial.user_attrs['model_name']}\n")
@@ -95,3 +96,42 @@ if __name__ == "__main__":
         f.write(f"Valor: {study.best_trial.value}\n")
         for key, value in study.best_trial.params.items():
             f.write(f"{key}: {value}\n")
+
+    print("\n🧪 Avaliando melhor modelo no conjunto de TESTE...")
+
+    # Carrega dados de teste e prepara loader com batch_size ideal
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=best_trial.params["batch_size"],
+        shuffle=False
+    )
+
+    # Reconstrói o melhor modelo com os melhores hiperparâmetros
+    best_model = get_model(
+        model_name=model_name,
+        num_classes=num_classes,
+        hyperparams=best_trial.params
+    ).to(device)
+
+    best_model_path = os.path.join("models", f"{model_name}_trial{best_trial.number}.pt")
+    best_model.load_state_dict(torch.load(best_model_path))
+    best_model.eval()
+
+    # Avalia no test_loader
+    test_metrics, _ = evaluate_on_loader(
+        model=best_model,
+        dataloader=test_loader,
+        device=device,
+        loss_fn=torch.nn.CrossEntropyLoss(),
+        num_classes=num_classes,
+        hyperparams=best_trial.params,
+        model_name=model_name,
+        save_dir="logs"
+    )
+
+    # Exibe e salva métricas de teste
+    print("📊 Métricas no conjunto de teste:")
+    with open(os.path.join(f"logs/", f"avaliacao_teste_{model_name}.txt"), "w") as f:
+        for key, value in test_metrics.items():
+            print(f"{key}: {value:.4f}")
+            f.write(f"{key}: {value:.4f}\n")
